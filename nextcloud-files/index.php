@@ -62,7 +62,7 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 		NAME = 'Nextcloud Files',
 		AUTHOR      = 'Alexander Penny',
 		URL         = 'https://github.com/SnappyMail-Nextcloud-File-Sharing',
-		VERSION     = '0.6.2',
+		VERSION     = '0.7.1',
 		RELEASE     = '2026-08-29',
 		REQUIRED    = '2.36.0',
 		CATEGORY    = 'Integrations',
@@ -86,8 +86,8 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 		return array(
 			\RainLoop\Plugins\Property::NewInstance('brand_name')
 				->SetLabel('Name shown on the card')
-				->SetDefaultValue('Nextcloud')
-				->SetDescription('Heading printed on the block inserted into the message, for example your own service name.'),
+				->SetDefaultValue('')
+				->SetDescription('Leave blank to use whatever your Nextcloud calls itself, which is read from its Theming settings. Fill this in only to override that.'),
 			\RainLoop\Plugins\Property::NewInstance('allow_private_hosts')
 				->SetLabel('Allow a Nextcloud on a private network')
 				->SetType(\RainLoop\Enumerations\PluginPropertyType::BOOL)
@@ -112,6 +112,81 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 			$aOut[] = $sPart;
 		}
 		return $aOut;
+	}
+
+	/**
+	 * What to print on the card.
+	 *
+	 * The admin setting wins when it is set, so a deployment can override the
+	 * name. Otherwise we use whatever the server calls itself, cached in the
+	 * user settings so this is not an HTTP round trip on every settings read.
+	 */
+	private function brandName(array $a) : string
+	{
+		$sOverride = \trim((string) $this->Config()->Get('plugin', 'brand_name', ''));
+		if ('' !== $sOverride) {
+			return $sOverride;
+		}
+
+		$sCached = \trim((string) ($a['brandName'] ?? ''));
+		if ('' !== $sCached) {
+			return $sCached;
+		}
+
+		// Nothing cached yet. Only worth asking once we have a server to ask.
+		if (empty($a['url'])) {
+			return 'Nextcloud';
+		}
+
+		$sName = $this->fetchInstanceName($a);
+		if ('' !== $sName) {
+			$this->saveSettings(array('brandName' => $sName));
+			return $sName;
+		}
+
+		return 'Nextcloud';
+	}
+
+	/**
+	 * Read the instance name from the Theming app.
+	 *
+	 * theming.name is the branded name; theming.productName stays "Nextcloud"
+	 * on a themed instance, so it is only a fallback. Failure is not an error
+	 * worth surfacing: the caller just falls back to "Nextcloud".
+	 */
+	private function fetchInstanceName(array $a) : string
+	{
+		try {
+			$aRes = $this->httpRequest(
+				'GET',
+				$a['url'] . '/ocs/v2.php/cloud/capabilities',
+				array('OCS-APIRequest: true', 'Accept: application/json'),
+				null,
+				(!empty($a['user']) && !empty($a['password'])) ? ($a['user'] . ':' . $a['password']) : null
+			);
+		} catch (\Exception $e) {
+			return '';
+		}
+
+		if (200 !== $aRes['code']) {
+			return '';
+		}
+
+		$aJson = \json_decode($aRes['body'], true);
+		$aTheme = $aJson['ocs']['data']['capabilities']['theming'] ?? null;
+		if (!\is_array($aTheme)) {
+			return '';
+		}
+
+		foreach (array('name', 'productName') as $sKey) {
+			$sVal = \trim((string) ($aTheme[$sKey] ?? ''));
+			if ('' !== $sVal) {
+				// keep it short enough to sit on one line of the card
+				return \mb_substr($sVal, 0, 40);
+			}
+		}
+
+		return '';
 	}
 
 	public function Init() : void
@@ -302,7 +377,9 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 			'url'  => $this->normalizeServerUrl((string) ($aChanges['url'] ?? $aNow['url'])),
 			'user' => \trim((string) ($aChanges['user'] ?? $aNow['user'])),
 			'userId' => \trim((string) ($aChanges['userId'] ?? $aNow['userId'])),
-			'root' => \trim((string) ($aChanges['root'] ?? $aNow['root']))
+			'root' => \trim((string) ($aChanges['root'] ?? $aNow['root'])),
+			// cached instance name; asked for once, then reused
+			'brandName' => \trim((string) ($aChanges['brandName'] ?? ($aNow['brandName'] ?? '')))
 		);
 
 		// Re-encrypting the current password on every save is what quietly
@@ -364,7 +441,7 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 			'user'      => $a['user'],
 			'root'      => $a['root'],
 			'connected' => '' !== $a['url'] && '' !== $a['user'] && '' !== $a['password'],
-			'brand'     => $this->Config()->Get('plugin', 'brand_name', 'Nextcloud'),
+			'brand'     => $this->brandName($a),
 			// true when a credential is stored but could not be decrypted, i.e.
 			// the mail password changed. The UI uses this to explain why a
 			// reconnect is needed rather than just failing.
@@ -390,7 +467,7 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 	 */
 	public function DoDisconnect()
 	{
-		$this->saveSettings(array('user' => '', 'userId' => '', 'password' => ''));
+		$this->saveSettings(array('user' => '', 'userId' => '', 'password' => '', 'brandName' => ''));
 
 		return $this->jsonResponse(__FUNCTION__, true);
 	}

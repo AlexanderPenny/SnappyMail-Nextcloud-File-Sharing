@@ -57,7 +57,12 @@ dialog.nc-modal::backdrop { background: rgba(32, 33, 36, .45); }
 	border-bottom: 1px solid #e0e0e0;
 }
 
-.nc-title { font-weight: 600; font-size: 15px; }
+/* The title absorbs the free space so the cog and the close button sit
+   together on the right. Without this, space-between on three children
+   strands the cog in the middle of the header. */
+.nc-title { font-weight: 600; font-size: 15px; flex: 1 1 auto; min-width: 0; }
+.nc-head { gap: 2px; }   /* breathing room between cog and close */
+/* marker: nc-head-actions */
 
 .nc-close {
 	border: 0;
