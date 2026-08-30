@@ -1,4 +1,13 @@
 /**
+ * SnappyMail Nextcloud File Sharing
+ *
+ * Copyright (c) 2026 Alexander L. Penny
+ *
+ * Licensed under the MIT Licence. See the LICENSE file in the project root
+ * for the full text.
+ */
+
+/**
  * ============================================================================
  *  Nextcloud Files for SnappyMail - client side
  * ============================================================================

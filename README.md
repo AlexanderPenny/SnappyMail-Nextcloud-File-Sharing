@@ -113,6 +113,6 @@ The password travels in the same email as the link, so anyone holding the messag
 
 ## Licence
 
-MIT, matching the plugin metadata. No `LICENSE` file in the repository yet, so add one if you intend to rely on it.
+MIT. Copyright 2026 Alexander L. Penny. Full text in [LICENSE](LICENSE).
 
 SnappyMail is AGPL 3.0 and some of its bundled plugins are MIT. Nextcloud imposes nothing here, since only its HTTP API is used.

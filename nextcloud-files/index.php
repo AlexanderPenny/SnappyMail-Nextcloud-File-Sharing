@@ -1,5 +1,13 @@
 <?php
 /**
+ * SnappyMail Nextcloud File Sharing
+ *
+ * Copyright (c) 2026 Alexander L. Penny
+ *
+ * Licensed under the MIT Licence. See the LICENSE file in the project root
+ * for the full text.
+ */
+/**
  * ============================================================================
  *  Nextcloud Files for SnappyMail
  * ============================================================================
@@ -60,9 +68,9 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 
 	const
 		NAME = 'Nextcloud Files',
-		AUTHOR      = 'Alexander Penny',
+		AUTHOR      = 'Alexander L. Penny',
 		URL         = 'https://github.com/SnappyMail-Nextcloud-File-Sharing',
-		VERSION     = '0.7.1',
+		VERSION     = '0.7.2',
 		RELEASE     = '2026-08-29',
 		REQUIRED    = '2.36.0',
 		CATEGORY    = 'Integrations',
