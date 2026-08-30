@@ -1,0 +1,224 @@
+/**
+ * Nextcloud Files for SnappyMail - picker modal styling.
+ *
+ * This styles the file-browser modal ONLY. The card inserted into the message
+ * is styled inline in js/picker.js, because receiving mail clients strip
+ * <style> blocks - nothing here reaches the recipient.
+ *
+ * Colours follow Google/Material greys so the modal sits comfortably next to
+ * SnappyMail's own themes without depending on any of them.
+ */
+
+/* The modal is a native <dialog> shown with showModal(), because SnappyMail's
+   own popups are too - and a modal dialog paints in the browser's top layer,
+   which no z-index on a normal element can reach.
+
+   Everything here is overriding SnappyMail's shipped `dialog {}` rules: it
+   gives dialogs a white background, a border, a max-width and a top-anchored
+   margin, none of which we want, since .nc-card below already draws the box.
+   `dialog.nc-modal` and `dialog:not(.animate)` have equal specificity, so the
+   JS also adds the `animate` class rather than relying on rule order. */
+dialog.nc-modal {
+	position: fixed;
+	inset: 0;
+	margin: auto;               /* with inset:0, centres both ways */
+	width: fit-content;
+	height: fit-content;
+	max-width: none;
+	max-height: none;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	overflow: visible;
+	opacity: 1;
+}
+
+dialog.nc-modal::backdrop { background: rgba(32, 33, 36, .45); }
+
+/* The dialog itself. Capped so long listings scroll rather than overflow. */
+.nc-card {
+	background: #fff;
+	color: #202124;
+	width: min(560px, 92vw);
+	max-height: 74vh;
+	border-radius: 12px;
+	box-shadow: 0 8px 28px rgba(0, 0, 0, .28);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;           /* keeps children inside the rounded corners */
+}
+
+.nc-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.nc-title { font-weight: 600; font-size: 15px; }
+
+.nc-close {
+	border: 0;
+	background: transparent;
+	font-size: 16px;
+	cursor: pointer;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	color: #5f6368;
+}
+.nc-close:hover { background: #f1f3f4; }
+
+/* Only this scrolls, so the header stays put */
+.nc-body { overflow: auto; padding: 6px 0; }
+
+/* Current path, above the listing */
+.nc-crumb {
+	padding: 6px 16px;
+	font-size: 12px;
+	color: #5f6368;
+	word-break: break-all;      /* deep paths must not widen the dialog */
+}
+
+/* One file or folder */
+.nc-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 16px;
+	cursor: pointer;
+	font-size: 14px;
+}
+.nc-row:hover { background: #f1f3f4; }
+
+.nc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-size { color: #5f6368; font-size: 12px; white-space: nowrap; }
+
+.nc-empty,
+.nc-error {
+	padding: 18px 16px;
+	color: #5f6368;
+	font-size: 13px;
+	text-align: center;
+}
+.nc-error { color: #d93025; }
+
+/* The toolbar button injected into the compose window.
+   Sizing and colour come from SnappyMail's own .btn rules - all this adds is a
+   pointer cursor and vertical centring for the inline SVG logo. */
+.nc-files-btn { cursor: pointer; }
+.nc-files-btn svg { display: inline-block; vertical-align: middle; }
+
+/* Follow the user's system theme, as SnappyMail's own themes do */
+@media (prefers-color-scheme: dark) {
+	.nc-card  { background: #1f1f1f; color: #e8eaed; }
+	.nc-head  { border-bottom-color: #3c4043; }
+	.nc-row:hover,
+	.nc-close:hover { background: #2f3033; }
+	.nc-crumb,
+	.nc-size,
+	.nc-empty { color: #9aa0a6; }
+}
+
+/* ---------------------------------------------------------------------------
+   Connection settings form.
+   Lives inside the same modal body as the file list, because the plugin API
+   offers no template hook for adding a page to SnappyMail's settings screen.
+   --------------------------------------------------------------------------- */
+
+.nc-form { padding: 14px 16px 18px; display: flex; flex-direction: column; }
+
+/* Short explanatory line above the form, e.g. on first run */
+.nc-note {
+	font-size: 13px;
+	color: #5f6368;
+	padding-bottom: 10px;
+}
+
+.nc-label {
+	font-size: 12px;
+	font-weight: 600;
+	margin-top: 10px;
+	margin-bottom: 4px;
+}
+
+.nc-input {
+	font: inherit;
+	font-size: 14px;
+	padding: 7px 10px;
+	border: 1px solid #dadce0;
+	border-radius: 6px;
+	background: #fff;
+	color: inherit;
+	width: 100%;
+	box-sizing: border-box;     /* so the padding does not overflow the modal */
+}
+.nc-input:focus { outline: 2px solid #0082c9; outline-offset: -1px; }
+
+/* Sub-label under an input explaining what to put there */
+.nc-hint { font-size: 11px; color: #5f6368; margin-top: 3px; }
+
+.nc-save {
+	margin-top: 18px;
+	align-self: flex-start;
+	font: inherit;
+	font-size: 14px;
+	padding: 8px 18px;
+	border: 0;
+	border-radius: 6px;
+	background: #0082c9;
+	color: #fff;
+	cursor: pointer;
+}
+.nc-save:hover:not(:disabled) { background: #0069a3; }
+.nc-save:disabled { opacity: .6; cursor: default; }
+
+/* The gear sits next to the close button and shares its shape */
+.nc-gear { font-size: 15px; }
+
+@media (prefers-color-scheme: dark) {
+	.nc-input { background: #2b2b2e; border-color: #5f6368; }
+	.nc-note,
+	.nc-hint { color: #9aa0a6; }
+}
+
+/* Buttons that sit side by side (Save next to Disconnect) */
+.nc-row-btns {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin-top: 18px;
+}
+.nc-row-btns .nc-save { margin-top: 0; }
+
+/* Destructive / secondary action: Disconnect, Cancel */
+.nc-danger {
+	font: inherit;
+	font-size: 14px;
+	margin-top: 18px;
+	align-self: flex-start;
+	padding: 8px 18px;
+	border: 1px solid #dadce0;
+	border-radius: 6px;
+	background: transparent;
+	color: #d93025;
+	cursor: pointer;
+}
+.nc-danger:hover:not(:disabled) { background: rgba(217, 48, 37, .08); }
+.nc-danger:disabled { opacity: .6; cursor: default; }
+.nc-row-btns .nc-danger { margin-top: 0; }
+
+/* Explanatory paragraph under the Connect button */
+.nc-foot {
+	margin-top: 16px;
+	line-height: 1.5;
+	max-width: 46em;
+}
+
+@media (prefers-color-scheme: dark) {
+	.nc-danger { border-color: #5f6368; color: #f28b82; }
+	.nc-danger:hover:not(:disabled) { background: rgba(242, 139, 130, .12); }
+}
