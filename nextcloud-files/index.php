@@ -62,7 +62,7 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 		NAME = 'Nextcloud Files',
 		AUTHOR      = 'Alexander Penny',
 		URL         = 'https://github.com/SnappyMail-Nextcloud-File-Sharing',
-		VERSION     = '0.5.1',
+		VERSION     = '0.6.2',
 		RELEASE     = '2026-08-29',
 		REQUIRED    = '2.36.0',
 		CATEGORY    = 'Integrations',
@@ -990,11 +990,22 @@ class NextcloudFilesPlugin extends \RainLoop\Plugins\AbstractPlugin
 		$sPath = '/' . \ltrim((string) $this->jsonParam('path', ''), '/');
 		$sExp  = \trim((string) $this->jsonParam('expireDate', ''));
 
+		// The picker sends a number of days. 0 means the user asked for no
+		// expiry at all, which is why this is not a simple empty check.
+		$mDays = $this->jsonParam('expireDays', null);
+		if (null !== $mDays && '' !== $mDays) {
+			$iDays = (int) $mDays;
+			$sExp  = $iDays > 0 ? \gmdate('Y-m-d', \strtotime('+' . $iDays . ' days')) : '';
+			$bExplicit = true;
+		} else {
+			$bExplicit = false;
+		}
+
 		// Default the share to one year. Nextcloud keeps a share for ever
 		// unless told otherwise, and a link that outlives its purpose is the
 		// main way these quietly turn into a liability. An explicit
 		// expireDate from the client still wins.
-		if ('' === $sExp) {
+		if ('' === $sExp && !$bExplicit) {
 			$sExp = \gmdate('Y-m-d', \strtotime('+' . self::DEFAULT_EXPIRY_DAYS . ' days'));
 		}
 

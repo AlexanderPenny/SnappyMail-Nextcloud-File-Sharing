@@ -36,9 +36,17 @@ If you would rather the picker started somewhere other than the top of your file
 
 ## Using it day to day
 
-Write your email as normal, then click the Nextcloud button whenever you want to send something. Browse, click a file, and the block appears at the bottom of your draft. Folders open when you click them and there is an arrow to go back up.
+Write your email as normal, then click the Nextcloud button whenever you want to send something.
 
-Everything below that point is yours. The block is ordinary HTML sitting in your message, so you can move it, delete it, or carry on typing underneath it.
+The picker works on a click once to select, click again to act basis. The first click highlights an entry. Clicking a highlighted folder goes into it, and clicking a highlighted file shares it. There is an arrow at the top to go back up a level.
+
+That two step behaviour exists for a reason. If a single click on a folder went straight into it, there would be no way to ever pick a folder as the thing you want to share, so folders would be browsable and nothing more.
+
+At the bottom of the picker there is a dropdown for how long the link should last and a Share button. The button stays greyed out until you have selected something, then tells you whether it is about to share a file or a folder. You can also just click your selection a second time, which does the same thing.
+
+**You can share folders as well as files.** Worth thinking about before you do: a shared folder gives the recipient a browsable view of everything inside it, including anything you add to it later. That is usually what people want, but it is a wider grant than a single file.
+
+Once shared, the block appears at the bottom of your draft. It is ordinary HTML sitting in your message, so you can move it, delete it, or carry on typing underneath it.
 
 ## Settings
 
@@ -74,7 +82,9 @@ Every share the plugin makes is a public link with three things applied to it.
 
 **Read only permission**, so nobody can upload into your Nextcloud through the link.
 
-**A one year expiry**, because Nextcloud keeps shares for ever unless you tell it otherwise, and a link that outlives the reason it existed is how these things quietly become a problem. The date is worked out when you pick the file, so a link made today expires a year from today and one made tomorrow expires a year from tomorrow. They do not all pile up on one date. The card prints the date it will stop working, and that date is read back from Nextcloud's own response rather than from what the plugin asked for, so what you see is what the server actually stored.
+**An expiry you choose**, from the dropdown in the picker: 3 days, 7 days, 2 weeks, 1 month, 2 months, 3 months, 6 months, 1 year, or no expiry at all. It defaults to a year, because Nextcloud keeps shares for ever unless you tell it otherwise, and a link that outlives the reason it existed is how these things quietly become a problem.
+
+The date is worked out at the moment you share, so a link made today expires a year from today and one made tomorrow expires a year from tomorrow. They do not all pile up on the same date. The card prints when the link stops working, and that date is read back from Nextcloud's own response rather than from what the plugin asked for, so what you see is what the server actually stored.
 
 It is worth being straight about the password though. It travels in the same email as the link, so anybody who receives or forwards that message has both halves. What it protects against is the link leaking on its own, in a server log, in a referrer header, or pasted somewhere it should not have been. That is a real improvement over a bare public link, but it is not the same as restricting the file to named people. If you need that, Nextcloud's email shares are the feature you want, and this plugin deliberately does not use them, because each recipient gets a different URL and one button in one email cannot serve all of them.
 
@@ -82,8 +92,9 @@ It is worth being straight about the password though. It travels in the same ema
 
 * It creates a fresh share every time. Sharing the same file twice gives you two links rather than reusing the first.
 * There is no way to revoke a share from inside SnappyMail. Use the Nextcloud web interface.
-* The expiry is fixed in code. It is one constant, `DEFAULT_EXPIRY_DAYS`, near the top of `index.php`, if a year does not suit you.
+* The default expiry, used when you do not touch the dropdown, is a constant near the top of `index.php` called `DEFAULT_EXPIRY_DAYS`.
 * Large folders come back in one response. There is no paging.
+* Only one item at a time. There is no multi select.
 
 ## If something is not working
 

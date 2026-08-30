@@ -27,7 +27,20 @@
 	'use strict';
 
 	/** Current browse path, so the modal can navigate up a level. */
-	var STATE = { path: '' };
+	var STATE = { path: '', selected: null };
+
+	/** Expiry choices offered in the footer. null means no expiry. */
+	var EXPIRY_CHOICES = [
+		{ label: '3 days',   days: 3 },
+		{ label: '7 days',   days: 7 },
+		{ label: '2 weeks',  days: 14 },
+		{ label: '1 month',  days: 30 },
+		{ label: '2 months', days: 60 },
+		{ label: '3 months', days: 90 },
+		{ label: '6 months', days: 182 },
+		{ label: '1 year',   days: 365 },
+		{ label: 'No expiry', days: 0 }
+	];
 
 	/** Name printed on the card. Replaced by the brand_name setting. */
 	var BRAND = 'Nextcloud';
@@ -258,18 +271,27 @@
 	}
 
 	/** Paint one directory listing into the modal. */
+	/**
+	 * Paint one directory listing.
+	 *
+	 * Selection model: the first click selects, a second click on the same
+	 * entry acts on it. Folders descend, files share. That keeps a single tap
+	 * from doing something irreversible while still allowing folders to be
+	 * shared, which a navigate on first click would have made impossible.
+	 */
 	function render(path, items) {
 		var body = document.getElementById('nc-files-body');
 		if (!body) { return; }
 
 		body.innerHTML = '';
 		STATE.path = path || '';
+		STATE.selected = null;
+		updateFooter();
 
 		body.appendChild(el('div', 'nc-crumb', '/' + (path || '')));
 
-		// ".." row, only when we are below the root
 		if (path) {
-			var up = el('div', 'nc-row nc-dir', '↑  ..');
+			var up = el('div', 'nc-row nc-dir', '\u2191  ..');
 			up.onclick = function () {
 				load(path.split('/').slice(0, -1).join('/'));
 			};
@@ -284,22 +306,59 @@
 		items.forEach(function (item) {
 			var row = el('div', 'nc-row ' + (item.isDir ? 'nc-dir' : 'nc-file'));
 			row.appendChild(el('span', 'nc-name',
-				(item.isDir ? '📁  ' : '📄  ') + item.name));
+				(item.isDir ? '\uD83D\uDCC1  ' : '\uD83D\uDCC4  ') + item.name));
 
 			if (!item.isDir) {
 				row.appendChild(el('span', 'nc-size', humanSize(item.size)));
 			}
 
-			// folders navigate, files get shared
 			row.onclick = function () {
-				if (item.isDir) { load(item.path); } else { share(item); }
+				if (STATE.selected && STATE.selected.path === item.path) {
+					// second click on the same entry
+					if (item.isDir) { load(item.path); } else { shareSelected(); }
+					return;
+				}
+				selectRow(body, row, item);
 			};
+
 			body.appendChild(row);
 		});
 	}
 
+	/** Mark one row as the current selection. */
+	function selectRow(body, row, item) {
+		var prev = body.querySelectorAll('.nc-row.nc-selected');
+		Array.prototype.forEach.call(prev, function (r) { r.classList.remove('nc-selected'); });
+		row.classList.add('nc-selected');
+		STATE.selected = item;
+		updateFooter();
+	}
+
+	/** Enable/disable the Share button and say what it will share. */
+	function setFooterVisible(bShow) {
+		var f = document.getElementById('nc-files-foot');
+		if (f) { f.style.display = bShow ? '' : 'none'; }
+	}
+
+	function updateFooter() {
+		var btn = document.getElementById('nc-share-btn');
+		if (!btn) { return; }
+		var sel = STATE.selected;
+		btn.disabled = !sel;
+		btn.textContent = sel ? ('Share ' + (sel.isDir ? 'folder' : 'file')) : 'Share';
+	}
+
+	/** Share whatever is currently selected, with the chosen expiry. */
+	function shareSelected() {
+		if (!STATE.selected) { return; }
+		var sel = document.getElementById('nc-expiry');
+		var days = sel ? parseInt(sel.value, 10) : 365;
+		share(STATE.selected, isNaN(days) ? 365 : days);
+	}
+
 	/** Fetch one directory level from the server. */
 	function load(path) {
+		setFooterVisible(true);
 		var body = document.getElementById('nc-files-body');
 		if (body) { body.textContent = ''; body.appendChild(el('div', 'nc-empty', 'Loading...')); }
 
@@ -313,23 +372,26 @@
 	}
 
 	/** Create the share link, insert the card, close the modal. */
-	function share(item) {
+	/**
+	 * Create the share and insert the card.
+	 *
+	 * @param {Object} item     the selected file or folder
+	 * @param {number} expireDays  0 means no expiry
+	 */
+	function share(item, expireDays) {
 		var body = document.getElementById('nc-files-body');
 		if (body) { body.textContent = ''; body.appendChild(el('div', 'nc-empty', 'Creating share link...')); }
 
-		call('NextcloudShare', { path: item.path }, function (err, res) {
+		call('NextcloudShare', { path: item.path, expireDays: expireDays }, function (err, res) {
 			if (err || !res || res.error) {
 				showError(body, (res && res.error) ? res.error : ('Could not create the share link - ' + err));
 				return;
 			}
 
 			var r = insertIntoEditor(
-				buildCard(res.name, res.url, item.size, res.password, res.expires),
+				buildCard(res.name, res.url, item.isDir ? 0 : item.size, res.password, res.expires),
 				res.url + (res.password ? ('\n\nPassword: ' + res.password) : ''));
 
-			// Close ONLY on success. Closing regardless made a failed insert look
-			// identical to a dialog that simply dismissed itself, and the old
-			// window.prompt() fallback is silently suppressed by iOS Safari.
 			if (r && r.ok) {
 				closeModal();
 				return;
@@ -395,6 +457,33 @@
 
 		card.appendChild(head);
 		card.appendChild(body);
+
+		// Footer: expiry choice plus the action button. Built once, so it is not
+		// lost when the body re-renders; hidden while a settings view shows.
+		var foot = el('div', 'nc-foot');
+		foot.id = 'nc-files-foot';
+
+		var expLabel = el('label', 'nc-exp-label', 'Link expires');
+		expLabel.htmlFor = 'nc-expiry';
+		foot.appendChild(expLabel);
+
+		var expSel = el('select', 'nc-exp-select');
+		expSel.id = 'nc-expiry';
+		EXPIRY_CHOICES.forEach(function (c) {
+			var opt = el('option', '', c.label);
+			opt.value = String(c.days);
+			if (365 === c.days) { opt.selected = true; }
+			expSel.appendChild(opt);
+		});
+		foot.appendChild(expSel);
+
+		var shareBtn = el('button', 'nc-share-btn', 'Share');
+		shareBtn.id = 'nc-share-btn';
+		shareBtn.disabled = true;
+		shareBtn.onclick = function () { shareSelected(); };
+		foot.appendChild(shareBtn);
+
+		card.appendChild(foot);
 		dlg.appendChild(card);
 
 		// Clicking the backdrop dismisses. Decide by TARGET IDENTITY, never by
@@ -465,6 +554,7 @@
 
 	/** The "not connected yet" view: an address and a Connect button. */
 	function renderConnect(current, message) {
+		setFooterVisible(false);
 		var body = document.getElementById('nc-files-body');
 		if (!body) { return; }
 
@@ -492,6 +582,7 @@
 
 	/** The "already connected" view: who we are, start folder, disconnect. */
 	function renderConnected(current) {
+		setFooterVisible(false);
 		var body = document.getElementById('nc-files-body');
 		if (!body) { return; }
 

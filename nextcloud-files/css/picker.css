@@ -222,3 +222,24 @@ dialog.nc-modal::backdrop { background: rgba(32, 33, 36, .45); }
 	.nc-danger { border-color: #5f6368; color: #f28b82; }
 	.nc-danger:hover:not(:disabled) { background: rgba(242, 139, 130, .12); }
 }
+
+/* selection + footer, added with the select then act picker */
+.nc-row.nc-selected { background: #e8f2fa; outline: 2px solid #0082c9; outline-offset: -2px; }
+.nc-foot { display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+	border-top: 1px solid #dadce0; }
+.nc-exp-label { font-size: 12px; color: #5f6368; }
+.nc-exp-select { font-size: 13px; padding: 4px 6px; }
+.nc-share-btn { margin-left: auto; padding: 7px 16px; border: 0; border-radius: 4px;
+	background: #0082c9; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
+.nc-share-btn:disabled { background: #c3c8cc; cursor: default; }
+
+/* Logo alignment only. Do NOT set display here: the attachment button next
+   to ours is a plain .btn, and changing our display type makes the two
+   different sizes. Nudge the glyph, never the box. */
+.nc-files-btn svg { vertical-align: middle; position: relative; top: -1px; }
+
+@media (prefers-color-scheme: dark) {
+	.nc-row.nc-selected { background: #14384f; }
+	.nc-foot { border-top-color: #3c4043; }
+	.nc-exp-label { color: #9aa0a6; }
+}
