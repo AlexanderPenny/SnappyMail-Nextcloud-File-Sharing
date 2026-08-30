@@ -87,7 +87,7 @@ Public links, with three things applied.
 
 **An expiry** from the dropdown: 3 days, 7 days, 2 weeks, 1 month, 2 months, 3 months, 6 months, 1 year, or none. Defaults to a year, because Nextcloud keeps shares forever otherwise.
 
-The date is calculated at the moment you share, so links do not accumulate on a single expiry date. The card shows the date read back from Nextcloud's response rather than the one requested, so a server that caps expiry by policy shows its real value.
+The date is calculated at the moment you share. The card shows the date read back from Nextcloud's response rather than the one requested, so a server that caps expiry by policy shows its real value.
 
 <img width="686" height="806" alt="image" src="https://github.com/user-attachments/assets/e3adfa70-c32a-4361-9c08-461e997677bd" />
 
