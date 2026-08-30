@@ -1,5 +1,7 @@
 # SnappyMail Nextcloud File Sharing
 
+<img width="1912" height="945" alt="image" src="https://github.com/user-attachments/assets/04a71cdd-65b4-4829-bccd-56b3612a7d24" />
+
 ## What this is
 
 This is a plugin for [SnappyMail](https://snappymail.eu/) that lets you attach a file from your Nextcloud straight into an email you are writing, without downloading it first and without attaching anything to the message itself.
@@ -24,6 +26,8 @@ Your Nextcloud password is never typed into SnappyMail and never stored by it. T
 4. Enable **Nextcloud Files** in the list.
 5. Reload your webmail with a hard refresh.
 
+<img width="860" height="532" alt="image" src="https://github.com/user-attachments/assets/c1b3c79e-d630-413e-979a-807cd291a65e" />
+
 That last step matters more than you would expect. SnappyMail builds the plugin asset URL from the plugin version rather than from the file contents, so browsers will happily serve yesterday's JavaScript until the version changes. There is no build step and nothing to compile.
 
 ## Connecting it to your Nextcloud
@@ -38,7 +42,12 @@ If you would rather the picker started somewhere other than the top of your file
 
 Write your email as normal, then click the Nextcloud button whenever you want to send something.
 
+<img width="1602" height="931" alt="image" src="https://github.com/user-attachments/assets/e096033e-c9bf-40e8-acd7-8709485a6bbc" />
+
 The picker works on a click once to select, click again to act basis. The first click highlights an entry. Clicking a highlighted folder goes into it, and clicking a highlighted file shares it. There is an arrow at the top to go back up a level.
+
+<img width="1586" height="928" alt="image" src="https://github.com/user-attachments/assets/bb899215-99b8-4c56-851d-226cfd42994e" />
+<img width="1022" height="915" alt="image" src="https://github.com/user-attachments/assets/8e38066a-56d0-4e24-9ba9-4943c6c52f17" />
 
 That two step behaviour exists for a reason. If a single click on a folder went straight into it, there would be no way to ever pick a folder as the thing you want to share, so folders would be browsable and nothing more.
 
@@ -47,6 +56,8 @@ At the bottom of the picker there is a dropdown for how long the link should las
 **You can share folders as well as files.** Worth thinking about before you do: a shared folder gives the recipient a browsable view of everything inside it, including anything you add to it later. That is usually what people want, but it is a wider grant than a single file.
 
 Once shared, the block appears at the bottom of your draft. It is ordinary HTML sitting in your message, so you can move it, delete it, or carry on typing underneath it.
+
+<img width="1912" height="945" alt="image" src="https://github.com/user-attachments/assets/04a71cdd-65b4-4829-bccd-56b3612a7d24" />
 
 ## Settings
 
@@ -84,7 +95,8 @@ Every share the plugin makes is a public link with three things applied to it.
 
 **An expiry you choose**, from the dropdown in the picker: 3 days, 7 days, 2 weeks, 1 month, 2 months, 3 months, 6 months, 1 year, or no expiry at all. It defaults to a year, because Nextcloud keeps shares for ever unless you tell it otherwise, and a link that outlives the reason it existed is how these things quietly become a problem.
 
-The date is worked out at the moment you share, so a link made today expires a year from today and one made tomorrow expires a year from tomorrow. They do not all pile up on the same date. The card prints when the link stops working, and that date is read back from Nextcloud's own response rather than from what the plugin asked for, so what you see is what the server actually stored.
+The date is worked out at the moment you share, so a link made today expires a year from today and one made tomorrow expires a year from tomorrow. The card prints when the link stops working, and that date is read back from Nextcloud's own response rather than from what the plugin asked for, so what you see is what the server actually stored.
+<img width="686" height="806" alt="image" src="https://github.com/user-attachments/assets/e3adfa70-c32a-4361-9c08-461e997677bd" />
 
 It is worth being straight about the password though. It travels in the same email as the link, so anybody who receives or forwards that message has both halves. What it protects against is the link leaking on its own, in a server log, in a referrer header, or pasted somewhere it should not have been. That is a real improvement over a bare public link, but it is not the same as restricting the file to named people. If you need that, Nextcloud's email shares are the feature you want, and this plugin deliberately does not use them, because each recipient gets a different URL and one button in one email cannot serve all of them.
 
